@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FundedNext | Consistency Support Test Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #0A0A0A;
+  --card: #16161A;
+  --card2: #1C1C22;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --purple: #6C5CE7;
+  --purple-light: #8B7CF6;
+  --purple-dim: rgba(108,92,231,0.15);
+  --text: #F0F0F2;
+  --muted: #8A8A99;
+  --faint: #3A3A46;
+  --success: #2ECC71;
+  --success-dim: rgba(46,204,113,0.1);
+  --warn: #F9CA24;
+  --warn-dim: rgba(249,202,36,0.08);
+  --danger: #FD79A8;
+  --danger-dim: rgba(253,121,168,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--black);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(108,92,231,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(108,92,231,0.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px;border-bottom:1px solid var(--border);background:rgba(10,10,10,0.92);backdrop-filter:blur(12px);}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-mark{width:26px;height:26px;}
+.logo-mark svg{width:100%;height:100%;}
+.logo-text{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.3px;}
+.logo-text span{color:var(--purple-light);}
+.header-right{display:flex;align-items:center;gap:10px;}
+
+/* LAYOUT */
+.page{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:32px 24px 60px;}
+
+/* CONFIG BAR */
+.config-bar{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+.config-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:200px;}
+.config-label{font-size:11px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);font-family:'Syne',sans-serif;}
+.config-input{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:border-color 0.15s;width:100%;}
+.config-input:focus{border-color:rgba(108,92,231,0.5);}
+.config-input::placeholder{color:var(--faint);}
+.run-btn{display:flex;align-items:center;gap:8px;padding:10px 24px;border-radius:10px;background:var(--purple);border:none;color:white;font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
+.run-btn:hover{background:var(--purple-light);}
+.run-btn:disabled{background:var(--faint);cursor:not-allowed;}
+.run-btn.spinning svg{animation:spin 0.8s linear infinite;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+/* PROGRESS */
+.progress-bar-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:28px;display:none;}
+.progress-bar-wrap.visible{display:block;}
+.progress-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.progress-label{font-size:13px;color:var(--muted);}
+.progress-pct{font-size:13px;font-weight:600;color:var(--purple-light);font-family:'Syne',sans-serif;}
+.progress-track{height:6px;background:var(--faint);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--purple);border-radius:3px;transition:width 0.3s ease;width:0%;}
+.progress-current{font-size:12px;color:var(--faint);margin-top:8px;}
+
+/* SUMMARY CARDS */
+.summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px;}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;}
+.sum-val{font-size:28px;font-weight:700;font-family:'Syne',sans-serif;margin-bottom:4px;}
+.sum-label{font-size:11px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+.sum-card.pass{border-color:rgba(46,204,113,0.25);background:var(--success-dim);}
+.sum-card.pass .sum-val{color:var(--success);}
+.sum-card.fail{border-color:rgba(253,121,168,0.25);background:var(--danger-dim);}
+.sum-card.fail .sum-val{color:var(--danger);}
+.sum-card.warn{border-color:rgba(249,202,36,0.2);background:var(--warn-dim);}
+.sum-card.warn .sum-val{color:var(--warn);}
+.sum-card.total{border-color:rgba(108,92,231,0.25);background:var(--purple-dim);}
+.sum-card.total .sum-val{color:var(--purple-light);}
+.sum-card.score{border-color:rgba(255,255,255,0.1);}
+.sum-card.score .sum-val{color:var(--text);}
+
+/* CATEGORY SECTIONS */
+.category-section{margin-bottom:24px;}
+.cat-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.cat-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text);letter-spacing:0.3px;}
+.cat-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;font-family:'Syne',sans-serif;}
+.cat-badge.pass{background:var(--success-dim);color:var(--success);border:1px solid rgba(46,204,113,0.2);}
+.cat-badge.fail{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(253,121,168,0.2);}
+.cat-badge.partial{background:var(--warn-dim);color:var(--warn);border:1px solid rgba(249,202,36,0.2);}
+.cat-badge.pending{background:rgba(138,138,153,0.1);color:var(--muted);border:1px solid var(--border);}
+
+/* TEST CARDS */
+.test-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:8px;transition:border-color 0.15s;}
+.test-card.pass{border-color:rgba(46,204,113,0.2);}
+.test-card.fail{border-color:rgba(253,121,168,0.2);}
+.test-card.warn{border-color:rgba(249,202,36,0.2);}
+.test-card.running{border-color:rgba(108,92,231,0.3);}
+.test-card.pending{opacity:0.5;}
+.test-header{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none;}
+.test-status-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.test-status-icon.pass{background:var(--success-dim);}
+.test-status-icon.fail{background:var(--danger-dim);}
+.test-status-icon.warn{background:var(--warn-dim);}
+.test-status-icon.running{background:var(--purple-dim);}
+.test-status-icon.pending{background:rgba(138,138,153,0.1);}
+.test-info{flex:1;}
+.test-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.test-category{font-size:11px;color:var(--muted);}
+.test-score-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;font-family:'Syne',sans-serif;flex-shrink:0;}
+.test-score-badge.pass{background:var(--success-dim);color:var(--success);}
+.test-score-badge.fail{background:var(--danger-dim);color:var(--danger);}
+.test-score-badge.warn{background:var(--warn-dim);color:var(--warn);}
+.test-score-badge.running{background:var(--purple-dim);color:var(--purple-light);}
+.test-score-badge.pending{background:rgba(138,138,153,0.1);color:var(--muted);}
+.expand-icon{color:var(--faint);transition:transform 0.15s;flex-shrink:0;}
+.test-card.expanded .expand-icon{transform:rotate(90deg);}
+.test-body{display:none;border-top:1px solid var(--border);padding:16px;}
+.test-card.expanded .test-body{display:block;}
+.test-body-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;}
+.test-field-label{font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);font-family:'Syne',sans-serif;margin-bottom:6px;}
+.test-query-box{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text);line-height:1.5;font-style:italic;}
+.test-response-box{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.6;max-height:160px;overflow-y:auto;white-space:pre-wrap;font-family:'DM Sans',sans-serif;}
+.test-checks{display:flex;flex-direction:column;gap:6px;}
+.check-row{display:flex;align-items:flex-start;gap:8px;font-size:12px;padding:5px 8px;border-radius:6px;}
+.check-row.pass{background:var(--success-dim);color:var(--text);}
+.check-row.fail{background:var(--danger-dim);color:var(--text);}
+.check-row.warn{background:var(--warn-dim);color:var(--text);}
+.check-icon{flex-shrink:0;margin-top:2px;font-size:13px;}
+.check-text{flex:1;line-height:1.4;}
+.verdict-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:500;margin-top:10px;}
+.verdict-row.pass{background:var(--success-dim);border:1px solid rgba(46,204,113,0.15);color:var(--success);}
+.verdict-row.fail{background:var(--danger-dim);border:1px solid rgba(253,121,168,0.15);color:var(--danger);}
+.verdict-row.warn{background:var(--warn-dim);border:1px solid rgba(249,202,36,0.15);color:var(--warn);}
+
+/* EXPORT */
+.export-bar{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 24px;margin-top:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.export-label{font-size:13px;color:var(--muted);}
+.export-btn{display:flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;}
+.export-btn:hover{border-color:var(--purple);color:var(--purple-light);}
+
+/* EMPTY */
+.empty-report{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-report .big{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;color:var(--text);margin-bottom:8px;}
+
+/* SPINNER DOTS */
+.spinner-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--purple-light);opacity:0.5;animation:dotBounce 1.2s ease-in-out infinite;margin:0 2px;}
+.spinner-dots span:nth-child(2){animation-delay:0.2s;}
+.spinner-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes dotBounce{0%,60%,100%{transform:translateY(0);opacity:0.5;}30%{transform:translateY(-5px);opacity:1;}}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">
+    <div class="logo-mark">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="28" rx="7" fill="#6C5CE7"/>
+        <path d="M7 20L14 8L21 20H7Z" fill="white" opacity="0.15"/>
+        <path d="M10 20L14 12L18 20H10Z" fill="white"/>
+      </svg>
+    </div>
+    <span class="logo-text">Funded<span>Next</span></span>
+  </a>
+  <div class="header-right">
+    <span style="font-size:12px;color:var(--muted);">Consistency Support</span>
+    <span style="font-size:12px;color:var(--faint);">·</span>
+    <span style="font-size:12px;color:var(--purple-light);font-family:'Syne',sans-serif;font-weight:600;">Test Report</span>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- CONFIG -->
+  <div class="config-bar">
+    <div class="config-field" style="max-width:480px;">
+      <div class="config-label">Groq API Key</div>
+      <input class="config-input" id="apiKeyInput" type="password" placeholder="gsk_..." value="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">
+    </div>
+    <div class="config-field" style="max-width:160px;">
+      <div class="config-label">Delay between tests</div>
+      <input class="config-input" id="delayInput" type="number" value="2000" min="500" max="10000" style="font-family:'DM Sans',sans-serif;">
+    </div>
+    <button class="run-btn" id="runBtn" onclick="runAllTests()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Run All Tests
+    </button>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar-wrap" id="progressWrap">
+    <div class="progress-top">
+      <span class="progress-label" id="progressLabel">Running tests...</span>
+      <span class="progress-pct" id="progressPct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-current" id="progressCurrent"></div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="summarySection" style="display:none;">
+    <div class="summary-grid">
+      <div class="sum-card total"><div class="sum-val" id="sumTotal">0</div><div class="sum-label">Total</div></div>
+      <div class="sum-card pass"><div class="sum-val" id="sumPass">0</div><div class="sum-label">Passed</div></div>
+      <div class="sum-card fail"><div class="sum-val" id="sumFail">0</div><div class="sum-label">Failed</div></div>
+      <div class="sum-card warn"><div class="sum-val" id="sumWarn">0</div><div class="sum-label">Partial</div></div>
+      <div class="sum-card score"><div class="sum-val" id="sumScore">-</div><div class="sum-label">Score</div></div>
+    </div>
+  </div>
+
+  <!-- TEST RESULTS -->
+  <div id="reportContent">
+    <div class="empty-report">
+      <div class="big">Ready to test</div>
+      <div>Enter your Groq API key and click Run All Tests to begin. All 25 test cases will run automatically.</div>
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="export-bar" id="exportBar" style="display:none;">
+    <span class="export-label">Test run complete — <span id="exportTime"></span></span>
+    <div style="display:flex;gap:8px;">
+      <button class="export-btn" onclick="exportCSV()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+      <button class="export-btn" onclick="exportJSON()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Export JSON
+      </button>
+      <button class="export-btn" onclick="window.print()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are a FundedNext customer support agent. A human support agent will copy your response and paste it directly to the client, so write as if you are talking directly to the client.
+
+KEY RULES:
+- NEVER ask follow-up questions. Always give a complete, self-contained answer even if the query is vague.
+- NEVER say "reach out to FundedNext support" or "contact our team" — you ARE the support.
+- Show empathy where appropriate. Be warm, clear and concise.
+- Do NOT use em dashes (— or –). Do not use markdown headers.
+- Only answer questions about Futures consistency rules. For anything outside this, politely say this tool covers Futures consistency rules only.
+- Write in plain conversational text with line breaks where needed.
+
+CONSISTENCY RULES — FULL KNOWLEDGE:
+
+The 40% consistency rule applies the same way across the Bolt Challenge Account, Legacy Challenge Account, and Flex Challenge Account. There is no consistency rule in any of their corresponding FundedNext Accounts.
+
+BOLT, LEGACY, AND FLEX CHALLENGE ACCOUNTS:
+- Rule: a trader's profit on any single day cannot exceed 40% of the total profit target.
+- Formula: 40% x Profit Target = Daily Profit Threshold
+- If the daily profit exceeds the threshold: New Profit Target = Highest Daily Profit / 40%
+- Bolt and Legacy $50K example (profit target $3,000): Daily threshold = $1,200. If a trader earns $1,500 in one day, the new profit target becomes $3,750.
+- Flex $50K example (profit target $2,500): Daily threshold = $1,000. If a trader earns $1,500 in one day, the new profit target becomes $3,750.
+- Bolt FundedNext Account: NO consistency rule.
+- Legacy FundedNext Account: NO consistency rule.
+- Flex FundedNext Account: NO consistency rule.
+
+RAPID CHALLENGE ACCOUNT:
+- NO consistency rule in the Rapid Challenge Account (Challenge Phase).
+
+RAPID FUNDEDNEXT ACCOUNT:
+- HAS a consistency rule for Performance Reward eligibility.
+- Formula: Highest Profit Contribution = (Highest Profit Day / Total Profit) x 100%
+- If 40% or less: rule met, eligible for Performance Reward.
+- If more than 40%: must keep trading until the rule is met.
+- No fixed number of days, but takes at least 3 trading days minimum.
+- Example: Day 1 profit $1,500 (contribution 100%), Day 2 +$1,200 total $2,700 (55.56%), Day 3 +$1,800 total $4,500 highest day now $1,800 (40%) = rule met, eligible for Performance Reward.
+
+PROFIT TARGETS BY ACCOUNT SIZE:
+Bolt Challenge: $50K=$3,000
+Legacy Challenge: $25K=$1,250 | $50K=$3,000 | $100K=$6,000
+Rapid Challenge: $25K=$1,500 | $50K=$3,000 | $100K=$5,000
+Flex Challenge: $50K=$2,500 | $100K=$5,000 | $150K=$8,000
+
+BRANDING — NEVER USE THESE TERMS:
+- "Payout" or "Withdrawal" → Performance Reward
+- "Profit Share" or "Profit Split" → Reward Share
+- "Overall Loss Limit" → Maximum Loss Limit
+- "funded account" (lowercase) → FundedNext Account
+- "capital" → simulated capital
+
+ESCALATION: Only respond with [ESCALATION_NEEDED] for genuine technical issues requiring backend investigation. Not for general questions.`;
+
+// ── TEST CASES ────────────────────────────────────────────────────────────
+const TEST_CASES = [
+  // ACCURACY
+  {
+    id: 'ACC-01', category: 'Accuracy', name: 'Bolt Challenge — 40% rule exists',
+    query: 'Is there a consistency rule in the Bolt Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'Confirms consistency rule exists in Challenge Phase', fn: r => /yes|there is|applies|40%/i.test(r) },
+      { id: 'c2', text: 'States NO rule in Bolt FundedNext Account', fn: r => /no consistency|no rule|does not apply|fundednext account/i.test(r) },
+      { id: 'c3', text: 'Mentions 40% threshold', fn: r => /40%|40 percent/i.test(r) },
+    ]
+  },
+  {
+    id: 'ACC-02', category: 'Accuracy', name: 'Legacy Challenge — correct profit targets',
+    query: 'What is the daily profit limit for my $100K Legacy Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'Mentions $6,000 profit target for $100K Legacy', fn: r => /6,000|6000|\$6k/i.test(r) },
+      { id: 'c2', text: 'Calculates $2,400 daily threshold (40% of $6,000)', fn: r => /2,400|2400/i.test(r) },
+    ]
+  },
+  {
+    id: 'ACC-03', category: 'Accuracy', name: 'Flex Challenge — correct recalculation',
+    query: 'I made $1,500 profit in a single day on my $50K Flex Challenge Account. What happens to my profit target?',
+    checks: [
+      { id: 'c1', text: 'States original target was $2,500', fn: r => /2,500|2500/i.test(r) },
+      { id: 'c2', text: 'Calculates new target as $3,750', fn: r => /3,750|3750/i.test(r) },
+      { id: 'c3', text: 'Uses correct formula (1500 / 0.40)', fn: r => /3,750|3750/i.test(r) },
+    ]
+  },
+  {
+    id: 'ACC-04', category: 'Accuracy', name: 'Rapid Challenge — NO consistency rule',
+    query: 'Do I need to follow a consistency rule in my Rapid Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'Clearly states NO consistency rule in Rapid Challenge', fn: r => /no consistency|no rule|does not|not apply/i.test(r) },
+      { id: 'c2', text: 'Does not incorrectly say there is a rule', fn: r => !/there is a consistency rule in the rapid challenge/i.test(r) },
+    ]
+  },
+  {
+    id: 'ACC-05', category: 'Accuracy', name: 'Rapid FundedNext Account — withdrawal rule',
+    query: 'When am I eligible to request a Performance Reward from my Rapid FundedNext Account?',
+    checks: [
+      { id: 'c1', text: 'Mentions highest profit day must be 40% or less of total profit', fn: r => /40%|40 percent/i.test(r) },
+      { id: 'c2', text: 'Mentions at least 3 trading days minimum', fn: r => /3 (trading )?days|three (trading )?days/i.test(r) },
+      { id: 'c3', text: 'Uses "Performance Reward" not "Payout" or "Withdrawal"', fn: r => /performance reward/i.test(r) && !/payout|withdrawal/i.test(r) },
+    ]
+  },
+  {
+    id: 'ACC-06', category: 'Accuracy', name: 'Bolt FundedNext Account — no consistency rule',
+    query: 'Is there a consistency rule in the Bolt FundedNext Account?',
+    checks: [
+      { id: 'c1', text: 'Clearly states NO consistency rule in Bolt FundedNext Account', fn: r => /no consistency|no rule|does not apply|not apply/i.test(r) },
+    ]
+  },
+  {
+    id: 'ACC-07', category: 'Accuracy', name: 'Legacy $50K — correct threshold calculation',
+    query: 'What is the maximum profit I can make in a single day on my $50K Legacy Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'States profit target is $3,000', fn: r => /3,000|3000/i.test(r) },
+      { id: 'c2', text: 'Calculates daily limit as $1,200 (40% of $3,000)', fn: r => /1,200|1200/i.test(r) },
+    ]
+  },
+  {
+    id: 'ACC-08', category: 'Accuracy', name: 'Rapid FundedNext — correct formula',
+    query: 'I made $2,000 on Day 1 and $1,000 on Day 2 in my Rapid FundedNext Account. Am I meeting the consistency rule?',
+    checks: [
+      { id: 'c1', text: 'Calculates total profit as $3,000', fn: r => /3,000|3000/i.test(r) },
+      { id: 'c2', text: 'Calculates Day 1 contribution as 66.67% or similar', fn: r => /66|67%|66\.6|not met|not eligible/i.test(r) },
+      { id: 'c3', text: 'States rule is NOT met yet', fn: r => /not (yet )?met|not eligible|still (need|trading)|keep trading/i.test(r) },
+    ]
+  },
+  // BRANDING & TERMINOLOGY
+  {
+    id: 'TRM-01', category: 'Terminology', name: 'Never uses "Payout" — says "Performance Reward"',
+    query: 'How do I get my payout from my Rapid FundedNext Account?',
+    checks: [
+      { id: 'c1', text: 'Uses "Performance Reward" not "Payout"', fn: r => /performance reward/i.test(r) },
+      { id: 'c2', text: 'Does NOT use the word "payout"', fn: r => !/\bpayout\b/i.test(r) },
+    ]
+  },
+  {
+    id: 'TRM-02', category: 'Terminology', name: 'Never uses "funded account" — says "FundedNext Account"',
+    query: 'What happens after I pass the Bolt Challenge?',
+    checks: [
+      { id: 'c1', text: 'Does NOT say "funded account" (lowercase)', fn: r => !/\bfunded account\b(?! is a FundedNext)/i.test(r) },
+      { id: 'c2', text: 'Uses "FundedNext Account" with correct capitalization', fn: r => /FundedNext Account/i.test(r) },
+    ]
+  },
+  {
+    id: 'TRM-03', category: 'Terminology', name: 'Correct account name capitalization',
+    query: 'Does the bolt challenge account have a consistency rule?',
+    checks: [
+      { id: 'c1', text: 'Uses "Bolt Challenge Account" with correct capitalization', fn: r => /Bolt Challenge Account/i.test(r) },
+    ]
+  },
+  {
+    id: 'TRM-04', category: 'Terminology', name: 'Never uses "Overall Loss Limit"',
+    query: 'What is the overall loss limit for the Rapid Challenge?',
+    checks: [
+      { id: 'c1', text: 'Does NOT say "Overall Loss Limit"', fn: r => !/overall loss limit/i.test(r) },
+      { id: 'c2', text: 'Uses "Maximum Loss Limit" if relevant', fn: r => /maximum loss limit|consistency/i.test(r) },
+    ]
+  },
+  {
+    id: 'TRM-05', category: 'Terminology', name: 'No em dashes in response',
+    query: 'Can you explain the consistency rule for the Flex Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'Does not contain em dashes (— or –)', fn: r => !/[—–]/.test(r) },
+    ]
+  },
+  // BEHAVIOR
+  {
+    id: 'BEH-01', category: 'Behavior', name: 'Never asks follow-up questions',
+    query: 'Tell me about the consistency rule.',
+    checks: [
+      { id: 'c1', text: 'Gives a complete answer without asking for more info', fn: r => r.length > 100 },
+      { id: 'c2', text: 'Does not end with a question to the client', fn: r => !/(which model|what account|could you (tell|clarify|share)|can you (tell|clarify)|what (size|type) (of )?account)\?/i.test(r) },
+    ]
+  },
+  {
+    id: 'BEH-02', category: 'Behavior', name: 'Never says "reach out to support"',
+    query: 'My profit target changed, who should I contact?',
+    checks: [
+      { id: 'c1', text: 'Does not say "reach out to support/team"', fn: r => !/reach out to (support|our team|fundednext)/i.test(r) },
+      { id: 'c2', text: 'Provides a helpful answer directly', fn: r => r.length > 50 },
+    ]
+  },
+  {
+    id: 'BEH-03', category: 'Behavior', name: 'Does not escalate simple questions',
+    query: 'What is 40% of $3,000?',
+    checks: [
+      { id: 'c1', text: 'Does NOT escalate a math question', fn: r => !/ESCALATION_NEEDED/i.test(r) },
+      { id: 'c2', text: 'Answers or relates it to consistency rules', fn: r => /1,200|1200|\$1\.2k|consistency/i.test(r) },
+    ]
+  },
+  {
+    id: 'BEH-04', category: 'Behavior', name: 'Handles vague query with complete answer',
+    query: 'How does the rule work?',
+    checks: [
+      { id: 'c1', text: 'Gives a complete answer covering the rule', fn: r => /40%|profit target|consistency/i.test(r) },
+      { id: 'c2', text: 'Does not ask which model or account', fn: r => !/(which model|what account)\?/i.test(r) },
+    ]
+  },
+  {
+    id: 'BEH-05', category: 'Behavior', name: 'Out-of-scope query handled politely',
+    query: 'What is the maximum drawdown for the Rapid Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'Politely says tool only covers consistency rules', fn: r => /consistency rules only|only covers consistency|outside (of )?what|not (cover|within)/i.test(r) },
+      { id: 'c2', text: 'Does NOT provide drawdown information', fn: r => !/maximum loss limit is \$|drawdown (is|limit)/i.test(r) },
+    ]
+  },
+  {
+    id: 'BEH-06', category: 'Behavior', name: 'Empathetic tone for frustrated client',
+    query: 'My profit target jumped from $3,000 to $3,750 and I had no idea this would happen. This is ridiculous!',
+    checks: [
+      { id: 'c1', text: 'Shows empathy and understanding', fn: r => /understand|sorry|apologize|frustrat|completely|absolutely/i.test(r) },
+      { id: 'c2', text: 'Explains why the target changed', fn: r => /40%|daily profit|threshold|exceeded/i.test(r) },
+    ]
+  },
+  {
+    id: 'BEH-07', category: 'Behavior', name: 'Corrects wrong client calculation',
+    query: 'I earned $1,500 today on my $50K Bolt Challenge Account. My friend said my new target is $5,000. Is that right?',
+    checks: [
+      { id: 'c1', text: 'Corrects the wrong figure ($5,000)', fn: r => /3,750|3750/i.test(r) },
+      { id: 'c2', text: 'Explains the correct calculation', fn: r => /1,500|40%|0\.40/i.test(r) },
+    ]
+  },
+  {
+    id: 'BEH-08', category: 'Behavior', name: 'No markdown headers in response',
+    query: 'Explain all consistency rules across all models.',
+    checks: [
+      { id: 'c1', text: 'Does not use markdown headers (## or **)', fn: r => !/^#{1,3} |^\*\*[A-Z]/m.test(r) },
+      { id: 'c2', text: 'Covers multiple models', fn: r => /bolt|legacy|flex|rapid/i.test(r) },
+    ]
+  },
+  // EDGE CASES
+  {
+    id: 'EDG-01', category: 'Edge Cases', name: 'Handles all-caps query',
+    query: 'DOES THE BOLT CHALLENGE HAVE A CONSISTENCY RULE?',
+    checks: [
+      { id: 'c1', text: 'Responds normally and accurately', fn: r => /40%|yes|consistency/i.test(r) },
+      { id: 'c2', text: 'Does not respond in all caps', fn: r => r !== r.toUpperCase() },
+    ]
+  },
+  {
+    id: 'EDG-02', category: 'Edge Cases', name: 'Handles multi-question query',
+    query: 'Does the Bolt Challenge have a consistency rule? What about the Rapid FundedNext Account? And the Legacy FundedNext Account?',
+    checks: [
+      { id: 'c1', text: 'Answers Bolt Challenge (has rule)', fn: r => /bolt.*(yes|has|applies|40%)/i.test(r) || /40%.*(bolt)/i.test(r) },
+      { id: 'c2', text: 'Answers Rapid FundedNext Account (has withdrawal rule)', fn: r => /rapid.*fundednext|fundednext.*rapid/i.test(r) },
+      { id: 'c3', text: 'Answers Legacy FundedNext Account (no rule)', fn: r => /legacy.*no|no.*legacy|legacy fundednext account.*no/i.test(r) },
+    ]
+  },
+  {
+    id: 'EDG-03', category: 'Edge Cases', name: 'Flex $150K — correct profit target',
+    query: 'What is the daily profit limit on my $150K Flex Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'States $8,000 profit target for $150K Flex', fn: r => /8,000|8000/i.test(r) },
+      { id: 'c2', text: 'Calculates $3,200 daily limit (40% of $8,000)', fn: r => /3,200|3200/i.test(r) },
+    ]
+  },
+  {
+    id: 'EDG-04', category: 'Edge Cases', name: 'Rapid FundedNext — exactly 40% contribution',
+    query: 'My highest profit day was $1,800 and my total profit is $4,500 in my Rapid FundedNext Account. Have I met the consistency rule?',
+    checks: [
+      { id: 'c1', text: 'Calculates 40% contribution correctly', fn: r => /40%|40 percent/i.test(r) },
+      { id: 'c2', text: 'States rule IS met at exactly 40%', fn: r => /met|eligible|yes|congrat|qualify/i.test(r) },
+    ]
+  },
+  {
+    id: 'EDG-05', category: 'Edge Cases', name: 'Does not invent rules for unknown model',
+    query: 'What is the consistency rule for the Stellar 2-Step Account?',
+    checks: [
+      { id: 'c1', text: 'Politely states tool covers Futures consistency rules only', fn: r => /futures consistency|consistency rules only|outside|not cover/i.test(r) },
+      { id: 'c2', text: 'Does NOT invent a rule for Stellar accounts', fn: r => !/stellar.*40%|40%.*stellar/i.test(r) },
+    ]
+  },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let results = [];
+let isRunning = false;
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function icon(type) {
+  const icons = {
+    pass: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2ECC71" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    fail: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FD79A8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    warn: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F9CA24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>`,
+    running: `<div class="spinner-dots"><span></span><span></span><span></span></div>`,
+    pending: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3A3A46" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`
+  };
+  return icons[type] || icons.pending;
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── RENDER TEST CARD ──────────────────────────────────────────────────────
+function renderCard(tc, result) {
+  const status = result ? result.status : 'pending';
+  const statusLabel = {pass:'PASS', fail:'FAIL', warn:'PARTIAL', running:'RUNNING', pending:'PENDING'}[status];
+  const checksHtml = result && result.checks ? result.checks.map(c =>
+    `<div class="check-row ${c.passed ? 'pass' : 'fail'}">
+      <span class="check-icon">${c.passed ? '✓' : '✗'}</span>
+      <span class="check-text">${escHtml(c.text)}</span>
+    </div>`
+  ).join('') : '<div style="color:var(--faint);font-size:12px;">Not yet run</div>';
+
+  const verdictText = {
+    pass: 'All checks passed',
+    fail: 'One or more checks failed',
+    warn: 'Some checks passed',
+    running: 'Running...',
+    pending: 'Pending'
+  }[status];
+
+  return `<div class="test-card ${status}" id="card-${tc.id}">
+    <div class="test-header" onclick="toggleCard('${tc.id}')">
+      <div class="test-status-icon ${status}">${icon(status)}</div>
+      <div class="test-info">
+        <div class="test-name">${escHtml(tc.name)}</div>
+        <div class="test-category">${tc.id} · ${tc.category}</div>
+      </div>
+      <span class="test-score-badge ${status}">${statusLabel}</span>
+      <svg class="expand-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="test-body">
+      <div class="test-body-grid">
+        <div>
+          <div class="test-field-label">Client Query</div>
+          <div class="test-query-box">${escHtml(tc.query)}</div>
+        </div>
+        <div>
+          <div class="test-field-label">AI Response</div>
+          <div class="test-response-box">${result && result.response ? escHtml(result.response) : '<span style="color:var(--faint)">Not yet run</span>'}</div>
+        </div>
+      </div>
+      <div class="test-field-label">Checks</div>
+      <div class="test-checks">${checksHtml}</div>
+      ${result ? `<div class="verdict-row ${status}">${icon(status)}<span>${verdictText}</span></div>` : ''}
+    </div>
+  </div>`;
+}
+
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('expanded');
+}
+
+// ── RENDER FULL REPORT ────────────────────────────────────────────────────
+function renderReport() {
+  // Group by category
+  const categories = {};
+  TEST_CASES.forEach(tc => {
+    if (!categories[tc.category]) categories[tc.category] = [];
+    categories[tc.category].push(tc);
+  });
+
+  let html = '';
+  for (const [cat, tests] of Object.entries(categories)) {
+    const catResults = tests.map(tc => results.find(r => r.id === tc.id));
+    const done = catResults.filter(r => r && r.status !== 'pending' && r.status !== 'running');
+    const catPass = done.filter(r => r.status === 'pass').length;
+    const catFail = done.filter(r => r.status === 'fail').length;
+    const catWarn = done.filter(r => r.status === 'warn').length;
+    const catBadge = done.length === 0 ? 'pending' : catFail > 0 ? 'fail' : catWarn > 0 ? 'partial' : 'pass';
+    const catBadgeText = done.length === 0 ? 'Pending' : `${catPass}/${done.length} passed`;
+
+    html += `<div class="category-section">
+      <div class="cat-header">
+        <span class="cat-title">${cat}</span>
+        <span class="cat-badge ${catBadge}">${catBadgeText}</span>
+      </div>`;
+    tests.forEach(tc => {
+      const result = results.find(r => r.id === tc.id);
+      html += renderCard(tc, result);
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('reportContent').innerHTML = html;
+  updateSummary();
+}
+
+function updateSummary() {
+  const done = results.filter(r => r.status !== 'pending' && r.status !== 'running');
+  const pass = done.filter(r => r.status === 'pass').length;
+  const fail = done.filter(r => r.status === 'fail').length;
+  const warn = done.filter(r => r.status === 'warn').length;
+  const score = done.length > 0 ? Math.round(((pass + warn * 0.5) / TEST_CASES.length) * 100) : 0;
+
+  document.getElementById('sumTotal').textContent = TEST_CASES.length;
+  document.getElementById('sumPass').textContent = pass;
+  document.getElementById('sumFail').textContent = fail;
+  document.getElementById('sumWarn').textContent = warn;
+  document.getElementById('sumScore').textContent = done.length > 0 ? score + '%' : '-';
+  document.getElementById('summarySection').style.display = done.length > 0 ? 'block' : 'none';
+}
+
+// ── API CALL ──────────────────────────────────────────────────────────────
+async function askAI(query) {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  // Try direct Groq first, fall back to worker
+  const urls = [
+    { url: 'https://api.groq.com/openai/v1/chat/completions', auth: 'Bearer ' + key },
+    { url: 'https://testcons.farhanoishikcsgo-908.workers.dev/', auth: 'Bearer ' + key }
+  ];
+
+  let lastErr = null;
+  for (const {url, auth} of urls) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 600,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: query }
+          ]
+        })
+      });
+      const data = await res.json();
+      if (data.error) { lastErr = new Error(data.error.message || JSON.stringify(data.error)); continue; }
+      return data.choices[0].message.content;
+    } catch(e) { lastErr = e; continue; }
+  }
+  throw lastErr || new Error('All endpoints failed');
+}
+
+// ── RUN TESTS ─────────────────────────────────────────────────────────────
+async function runAllTests() {
+  if (isRunning) return;
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key || !key.startsWith('gsk_')) {
+    alert('Please enter a valid Groq API key starting with gsk_');
+    return;
+  }
+
+  isRunning = true;
+  results = TEST_CASES.map(tc => ({ id: tc.id, status: 'pending', response: '', checks: [] }));
+  const delay = parseInt(document.getElementById('delayInput').value) || 2000;
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.classList.add('spinning');
+  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.87"/></svg> Running...`;
+
+  document.getElementById('progressWrap').classList.add('visible');
+  document.getElementById('exportBar').style.display = 'none';
+
+  renderReport();
+
+  for (let i = 0; i < TEST_CASES.length; i++) {
+    const tc = TEST_CASES[i];
+    const pct = Math.round((i / TEST_CASES.length) * 100);
+
+    // Update progress
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressCurrent').textContent = `Running: ${tc.id} — ${tc.name}`;
+    document.getElementById('progressLabel').textContent = `Test ${i+1} of ${TEST_CASES.length}`;
+
+    // Mark as running
+    results[i].status = 'running';
+    renderReport();
+
+    try {
+      const response = await askAI(tc.query);
+      const checkResults = tc.checks.map(c => ({ text: c.text, passed: c.fn(response) }));
+      const passCount = checkResults.filter(c => c.passed).length;
+      const status = passCount === checkResults.length ? 'pass' : passCount === 0 ? 'fail' : 'warn';
+      results[i] = { id: tc.id, status, response, checks: checkResults };
+    } catch(err) {
+      results[i] = { id: tc.id, status: 'fail', response: 'Error: ' + err.message, checks: tc.checks.map(c => ({ text: c.text, passed: false })) };
+    }
+
+    renderReport();
+    if (i < TEST_CASES.length - 1) await sleep(delay);
+  }
+
+  // Done
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressPct').textContent = '100%';
+  document.getElementById('progressLabel').textContent = 'All tests complete';
+  document.getElementById('progressCurrent').textContent = '';
+
+  btn.disabled = false;
+  btn.classList.remove('spinning');
+  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Again`;
+
+  const now = new Date();
+  document.getElementById('exportTime').textContent = now.toLocaleString();
+  document.getElementById('exportBar').style.display = 'flex';
+  isRunning = false;
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const rows = [['ID','Category','Test Name','Status','Query','Response','Checks Passed','Checks Failed']];
+  TEST_CASES.forEach(tc => {
+    const r = results.find(x => x.id === tc.id);
+    if (!r) return;
+    const passed = r.checks.filter(c => c.passed).length;
+    const failed = r.checks.filter(c => !c.passed).length;
+    rows.push([tc.id, tc.category, tc.name, r.status.toUpperCase(), tc.query, (r.response||'').replace(/\n/g,' '), passed, failed]);
+  });
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+  download('consistency-test-report.csv', 'text/csv', csv);
+}
+
+function exportJSON() {
+  const data = TEST_CASES.map(tc => {
+    const r = results.find(x => x.id === tc.id) || {};
+    return { id: tc.id, category: tc.category, name: tc.name, query: tc.query, status: r.status, response: r.response, checks: r.checks };
+  });
+  download('consistency-test-report.json', 'application/json', JSON.stringify(data, null, 2));
+}
+
+function download(filename, type, content) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type }));
+  a.download = filename;
+  a.click();
+}
+</script>
+</body>
+</html>
