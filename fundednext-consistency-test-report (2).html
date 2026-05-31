@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FundedNext | Consistency Support Test Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #0A0A0A;
+  --card: #16161A;
+  --card2: #1C1C22;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --purple: #6C5CE7;
+  --purple-light: #8B7CF6;
+  --purple-dim: rgba(108,92,231,0.15);
+  --text: #F0F0F2;
+  --muted: #8A8A99;
+  --faint: #3A3A46;
+  --success: #2ECC71;
+  --success-dim: rgba(46,204,113,0.1);
+  --warn: #F9CA24;
+  --warn-dim: rgba(249,202,36,0.08);
+  --danger: #FD79A8;
+  --danger-dim: rgba(253,121,168,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--black);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(108,92,231,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(108,92,231,0.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px;border-bottom:1px solid var(--border);background:rgba(10,10,10,0.92);backdrop-filter:blur(12px);}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-mark{width:26px;height:26px;}
+.logo-mark svg{width:100%;height:100%;}
+.logo-text{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.3px;}
+.logo-text span{color:var(--purple-light);}
+.header-right{display:flex;align-items:center;gap:10px;}
+
+/* LAYOUT */
+.page{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:32px 24px 60px;}
+
+/* CONFIG BAR */
+.config-bar{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+.config-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:200px;}
+.config-label{font-size:11px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);font-family:'Syne',sans-serif;}
+.config-input{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:border-color 0.15s;width:100%;}
+.config-input:focus{border-color:rgba(108,92,231,0.5);}
+.config-input::placeholder{color:var(--faint);}
+.run-btn{display:flex;align-items:center;gap:8px;padding:10px 24px;border-radius:10px;background:var(--purple);border:none;color:white;font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
+.run-btn:hover{background:var(--purple-light);}
+.run-btn:disabled{background:var(--faint);cursor:not-allowed;}
+.run-btn.spinning svg{animation:spin 0.8s linear infinite;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+/* PROGRESS */
+.progress-bar-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:28px;display:none;}
+.progress-bar-wrap.visible{display:block;}
+.progress-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.progress-label{font-size:13px;color:var(--muted);}
+.progress-pct{font-size:13px;font-weight:600;color:var(--purple-light);font-family:'Syne',sans-serif;}
+.progress-track{height:6px;background:var(--faint);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--purple);border-radius:3px;transition:width 0.3s ease;width:0%;}
+.progress-current{font-size:12px;color:var(--faint);margin-top:8px;}
+
+/* SUMMARY CARDS */
+.summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px;}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;}
+.sum-val{font-size:28px;font-weight:700;font-family:'Syne',sans-serif;margin-bottom:4px;}
+.sum-label{font-size:11px;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+.sum-card.pass{border-color:rgba(46,204,113,0.25);background:var(--success-dim);}
+.sum-card.pass .sum-val{color:var(--success);}
+.sum-card.fail{border-color:rgba(253,121,168,0.25);background:var(--danger-dim);}
+.sum-card.fail .sum-val{color:var(--danger);}
+.sum-card.warn{border-color:rgba(249,202,36,0.2);background:var(--warn-dim);}
+.sum-card.warn .sum-val{color:var(--warn);}
+.sum-card.total{border-color:rgba(108,92,231,0.25);background:var(--purple-dim);}
+.sum-card.total .sum-val{color:var(--purple-light);}
+.sum-card.score{border-color:rgba(255,255,255,0.1);}
+.sum-card.score .sum-val{color:var(--text);}
+
+/* CATEGORY SECTIONS */
+.category-section{margin-bottom:24px;}
+.cat-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.cat-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text);letter-spacing:0.3px;}
+.cat-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;font-family:'Syne',sans-serif;}
+.cat-badge.pass{background:var(--success-dim);color:var(--success);border:1px solid rgba(46,204,113,0.2);}
+.cat-badge.fail{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(253,121,168,0.2);}
+.cat-badge.partial{background:var(--warn-dim);color:var(--warn);border:1px solid rgba(249,202,36,0.2);}
+.cat-badge.pending{background:rgba(138,138,153,0.1);color:var(--muted);border:1px solid var(--border);}
+
+/* TEST CARDS */
+.test-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:8px;transition:border-color 0.15s;}
+.test-card.pass{border-color:rgba(46,204,113,0.2);}
+.test-card.fail{border-color:rgba(253,121,168,0.2);}
+.test-card.warn{border-color:rgba(249,202,36,0.2);}
+.test-card.running{border-color:rgba(108,92,231,0.3);}
+.test-card.pending{opacity:0.5;}
+.test-header{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none;}
+.test-status-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.test-status-icon.pass{background:var(--success-dim);}
+.test-status-icon.fail{background:var(--danger-dim);}
+.test-status-icon.warn{background:var(--warn-dim);}
+.test-status-icon.running{background:var(--purple-dim);}
+.test-status-icon.pending{background:rgba(138,138,153,0.1);}
+.test-info{flex:1;}
+.test-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.test-category{font-size:11px;color:var(--muted);}
+.test-score-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;font-family:'Syne',sans-serif;flex-shrink:0;}
+.test-score-badge.pass{background:var(--success-dim);color:var(--success);}
+.test-score-badge.fail{background:var(--danger-dim);color:var(--danger);}
+.test-score-badge.warn{background:var(--warn-dim);color:var(--warn);}
+.test-score-badge.running{background:var(--purple-dim);color:var(--purple-light);}
+.test-score-badge.pending{background:rgba(138,138,153,0.1);color:var(--muted);}
+.expand-icon{color:var(--faint);transition:transform 0.15s;flex-shrink:0;}
+.test-card.expanded .expand-icon{transform:rotate(90deg);}
+.test-body{display:none;border-top:1px solid var(--border);padding:16px;}
+.test-card.expanded .test-body{display:block;}
+.test-body-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;}
+.test-field-label{font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);font-family:'Syne',sans-serif;margin-bottom:6px;}
+.test-query-box{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text);line-height:1.5;font-style:italic;}
+.test-response-box{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.6;max-height:160px;overflow-y:auto;white-space:pre-wrap;font-family:'DM Sans',sans-serif;}
+.test-checks{display:flex;flex-direction:column;gap:6px;}
+.check-row{display:flex;align-items:flex-start;gap:8px;font-size:12px;padding:5px 8px;border-radius:6px;}
+.check-row.pass{background:var(--success-dim);color:var(--text);}
+.check-row.fail{background:var(--danger-dim);color:var(--text);}
+.check-row.warn{background:var(--warn-dim);color:var(--text);}
+.check-icon{flex-shrink:0;margin-top:2px;font-size:13px;}
+.check-text{flex:1;line-height:1.4;}
+.verdict-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:500;margin-top:10px;}
+.verdict-row.pass{background:var(--success-dim);border:1px solid rgba(46,204,113,0.15);color:var(--success);}
+.verdict-row.fail{background:var(--danger-dim);border:1px solid rgba(253,121,168,0.15);color:var(--danger);}
+.verdict-row.warn{background:var(--warn-dim);border:1px solid rgba(249,202,36,0.15);color:var(--warn);}
+
+/* EXPORT */
+.export-bar{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 24px;margin-top:28px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.export-label{font-size:13px;color:var(--muted);}
+.export-btn{display:flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;}
+.export-btn:hover{border-color:var(--purple);color:var(--purple-light);}
+
+/* EMPTY */
+.empty-report{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-report .big{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;color:var(--text);margin-bottom:8px;}
+
+/* SPINNER DOTS */
+.spinner-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--purple-light);opacity:0.5;animation:dotBounce 1.2s ease-in-out infinite;margin:0 2px;}
+.spinner-dots span:nth-child(2){animation-delay:0.2s;}
+.spinner-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes dotBounce{0%,60%,100%{transform:translateY(0);opacity:0.5;}30%{transform:translateY(-5px);opacity:1;}}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">
+    <div class="logo-mark">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="28" rx="7" fill="#6C5CE7"/>
+        <path d="M7 20L14 8L21 20H7Z" fill="white" opacity="0.15"/>
+        <path d="M10 20L14 12L18 20H10Z" fill="white"/>
+      </svg>
+    </div>
+    <span class="logo-text">Funded<span>Next</span></span>
+  </a>
+  <div class="header-right">
+    <span style="font-size:12px;color:var(--muted);">Consistency Support</span>
+    <span style="font-size:12px;color:var(--faint);">·</span>
+    <span style="font-size:12px;color:var(--purple-light);font-family:'Syne',sans-serif;font-weight:600;">Test Report</span>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- CONFIG -->
+  <div class="config-bar">
+    <div class="config-field" style="max-width:480px;">
+      <div class="config-label">Groq API Key</div>
+      <input class="config-input" id="apiKeyInput" type="password" placeholder="gsk_..." value="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">
+    </div>
+    <div class="config-field" style="max-width:160px;">
+      <div class="config-label">Delay between tests</div>
+      <input class="config-input" id="delayInput" type="number" value="2000" min="500" max="10000" style="font-family:'DM Sans',sans-serif;">
+    </div>
+    <button class="run-btn" id="runBtn" onclick="runAllTests()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Run All Tests
+    </button>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar-wrap" id="progressWrap">
+    <div class="progress-top">
+      <span class="progress-label" id="progressLabel">Running tests...</span>
+      <span class="progress-pct" id="progressPct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-current" id="progressCurrent"></div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="summarySection" style="display:none;">
+    <div class="summary-grid">
+      <div class="sum-card total"><div class="sum-val" id="sumTotal">0</div><div class="sum-label">Total</div></div>
+      <div class="sum-card pass"><div class="sum-val" id="sumPass">0</div><div class="sum-label">Passed</div></div>
+      <div class="sum-card fail"><div class="sum-val" id="sumFail">0</div><div class="sum-label">Failed</div></div>
+      <div class="sum-card warn"><div class="sum-val" id="sumWarn">0</div><div class="sum-label">Partial</div></div>
+      <div class="sum-card score"><div class="sum-val" id="sumScore">-</div><div class="sum-label">Score</div></div>
+    </div>
+  </div>
+
+  <!-- TEST RESULTS -->
+  <div id="reportContent">
+    <div class="empty-report">
+      <div class="big">Ready to test</div>
+      <div>Enter your Groq API key and click Run All Tests to begin. All 42 test cases will run automatically.</div>
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="export-bar" id="exportBar" style="display:none;">
+    <span class="export-label">Test run complete — <span id="exportTime"></span></span>
+    <div style="display:flex;gap:8px;">
+      <button class="export-btn" onclick="exportCSV()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+      <button class="export-btn" onclick="exportJSON()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Export JSON
+      </button>
+      <button class="export-btn" onclick="window.print()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are a FundedNext customer support agent. A human support agent will copy your response and paste it directly to the client, so write as if you are talking directly to the client.
+
+KEY RULES:
+- NEVER ask follow-up questions. Always give a complete, self-contained answer even if the query is vague.
+- NEVER say "reach out to FundedNext support" or "contact our team" — you ARE the support.
+- Show empathy where appropriate. Be warm, clear and concise.
+- Do NOT use em dashes (— or –). Do not use markdown headers.
+- Only answer questions about Futures consistency rules. For anything outside this, politely say this tool covers Futures consistency rules only.
+- Write in plain conversational text with line breaks where needed.
+
+CONSISTENCY RULES — FULL KNOWLEDGE:
+
+The 40% consistency rule applies the same way across the Bolt Challenge Account, Legacy Challenge Account, and Flex Challenge Account. There is no consistency rule in any of their corresponding FundedNext Accounts. The Rapid Challenge Account has NO consistency rule during the Challenge Phase.
+
+TRADING DAY TIMING:
+- A trading day ends at 3:10 PM CT and reopens at 5:00 PM CT, which begins the next trading day.
+- After the weekend, trading resumes on Sunday at 5:00 PM CT.
+- The Dashboard updates at 5:00 PM CT. Nothing is re-adjusted before that time.
+- The consistency rule is checked and applied at the end of each trading day when the Dashboard resets at 5:00 PM CT.
+- If a trader breaches the consistency rule during a trading day, the new profit target is applied after the Dashboard resets at 5:00 PM CT.
+
+CRITICAL RULE — HOW DAILY PROFIT IS MEASURED (Bolt, Legacy, Flex Challenge):
+- The consistency rule is based on REALIZED profits ONLY — floating/unrealized profits do NOT count.
+- If a trader's floating profit goes above the threshold but they close the trade below the threshold, the consistency rule is NOT breached.
+- A day's profit = the SUM of ALL profitable closed trades within that trading day (3:10 PM CT to 3:10 PM CT next session). Losing trades within the same day are completely excluded from this sum.
+- Example: Trade 1 = +$700, Trade 2 = -$400, Trade 3 = +$600. The day's profit for consistency = $700 + $600 = $1,300. The -$400 loss is ignored entirely. If the threshold is $1,200, this BREACHES the rule because $1,300 > $1,200.
+- The rule looks ONLY at the sum of profitable trades, not the net PnL of the day. Losses are completely irrelevant.
+- Critical example: Threshold $1,200. Trader makes $1,201 profit in one trade, then loses $600 in another trade the same day. Day's profit for consistency = $1,201. Consistency IS BREACHED. The $600 loss is irrelevant.
+- Another example: Threshold $1,200. Trader makes $600 profit, loses $800, then makes $1,200.01 profit in the same day. Day's profit = $600 + $1,200.01 = $1,800.01. Consistency IS BREACHED. Losses irrelevant.
+- EXACT BOUNDARY: Exactly $1,200 on a $1,200 threshold is safe and does NOT breach the rule. Even $1,200.01 breaches it. This applies to all models equally.
+- The consistency rule is only checked at 5:00 PM CT (Dashboard reset). It is NOT enforced in real time during the trading day.
+- The rule applies equally to all Futures instruments with no exceptions.
+- There is no appeal process or grace period. Once the Dashboard updates at 5:00 PM CT the breach is final.
+- There is NO add-on or promotion that removes the consistency rule from Bolt, Legacy, or Flex Challenge Accounts. A "No Consistency Add-On" previously existed but has been removed and is no longer available. Do not mention it.
+
+NEW PROFIT TARGET AFTER BREACH (Bolt, Legacy, Flex Challenge):
+- When a trader's highest single-day profit exceeds 40% of the profit target, the new profit target = Highest Daily Profit / 40%.
+- The new profit target and the new daily threshold (40% of the new target) are both applied after the Dashboard resets at 5:00 PM CT.
+- Example: Original target $3,000, threshold $1,200. Day 1: highest profit $1,500 — new target = $1,500 / 0.40 = $3,750, new threshold = $1,500. Day 5: highest profit $2,000 — new target = $2,000 / 0.40 = $5,000, new threshold = $2,000.
+- The profit target can recalculate multiple times with no cap. There is no limit on how many times it can recalculate or how high it can go.
+- A trader can still pass the challenge even after multiple recalculations — they simply need to reach the final recalculated profit target.
+- When a trader passes the Challenge Phase, nothing related to the consistency rule carries over to the FundedNext Account. The FundedNext Account phase starts completely fresh. For Bolt, Legacy, and Flex FundedNext Accounts there is no consistency rule at all.
+
+BOLT, LEGACY, AND FLEX CHALLENGE ACCOUNTS:
+- Rule: a trader's highest single-day realized profit cannot exceed 40% of the total profit target.
+- Formula: 40% x Profit Target = Daily Profit Threshold
+- If the highest single-day realized profit exceeds the threshold: New Profit Target = Highest Daily Profit / 40%
+- Bolt and Legacy $50K example (profit target $3,000): Daily threshold = $1,200. If a trader's highest profit in a day is $1,500, the new profit target = $1,500 / 0.40 = $3,750.
+- Flex $50K example (profit target $2,500): Daily threshold = $1,000. If a trader's highest profit in a day is $1,500, the new profit target = $1,500 / 0.40 = $3,750.
+- Bolt FundedNext Account: NO consistency rule.
+- Legacy FundedNext Account: NO consistency rule.
+- Flex FundedNext Account: NO consistency rule.
+
+PROFIT TARGETS AND THRESHOLDS BY ACCOUNT SIZE:
+- Bolt Challenge: $50K = $3,000 profit target | $1,200 daily threshold
+- Legacy Challenge: $25K = $1,250 profit target | $500 threshold | $50K = $3,000 | $1,200 threshold | $100K = $6,000 | $2,400 threshold
+- Rapid Challenge: $25K = $1,500 | $50K = $3,000 | $100K = $5,000 (NO consistency rule applies in Challenge Phase)
+- Flex Challenge: $50K = $2,500 | $1,000 threshold | $100K = $5,000 | $2,000 threshold | $150K = $8,000 | $3,200 threshold
+
+RAPID CHALLENGE ACCOUNT:
+- NO consistency rule in the Rapid Challenge Account (Challenge Phase).
+
+RAPID FUNDEDNEXT ACCOUNT:
+- HAS a consistency rule for Performance Reward eligibility.
+- Based on realized profits only — same principle applies.
+- A day's profit = sum of ALL profitable closed trades that day. Losing trades are excluded entirely from the calculation. If total profit goes negative (losses exceed profits overall), losses still do not count — only profitable trade amounts are summed per day.
+- The highest profit day is whichever single trading day had the highest sum of profitable trades across the cycle.
+- If multiple days have equal profit, the contribution percentage is the same regardless of which day is counted.
+- CRD (Consistency Rule Deviation) = 40 in the API means the consistency rule applies. CRD = 0 means no consistency rule applies (e.g. Rapid Challenge Account).
+- Formula: Highest Profit Contribution = (Highest Profit Day / Total Profit) x 100%
+- Total Profit = sum of all profitable days across the cycle. Losing days do not reduce this figure.
+- If 40% or less: rule met, eligible for Performance Reward.
+- If more than 40%: must keep trading until the rule is met.
+- Exactly 40% IS within the rule and eligible for Performance Reward.
+- No fixed number of days, but takes at least 3 trading days minimum. The "3 days" refers to the minimum needed mathematically to achieve 40% contribution — it is not a separate requirement.
+- No appeal or grace period.
+- The consistency rule resets each Performance Reward cycle and is calculated fresh — not cumulative across cycles.
+- Example: Day 1 profitable trades sum = $1,500 (100% contribution), Day 2 profitable trades sum = $1,200, total = $2,700 (55.56%), Day 3 profitable trades sum = $1,800, total = $4,500, highest day now $1,800 (40%) = rule met, eligible for Performance Reward.
+
+WHY CONSISTENCY RULES EXIST:
+- Encourages stable, repeatable profitability instead of relying on a single high-profit day.
+- Prevents over-leveraging and erratic trading behaviors.
+- Develops disciplined trading habits essential for long-term success.
+
+BRANDING AND TERMINOLOGY — STRICTLY FOLLOW:
+
+DEPRECATED TERMS — NEVER USE:
+- "Payout" or "Withdrawal" → say Performance Reward
+- "Profit Share" or "Profit Split" → say Reward Share
+- "Registration Fee" or "Reward Bonus" → say Passing Reward
+- "Overall Loss Limit" → say Maximum Loss Limit
+- "Trailing MLL / OLL" → say Trailing Maximum Loss Limit
+- "funded account" (lowercase) → say FundedNext Account
+- "capital" alone → say simulated capital
+- "your account will get funded after the challenge" → say you will move on to the FundedNext Account
+- "Interview" or "Hireflix interview" → say Verification Session or Compliance Session
+- "15% Profit Share from Challenge Phase" → say 15% Reward from Challenge Phase
+
+MANDATORY CAPITALIZATION — always capitalize exactly as shown:
+FundedNext Account, Challenge Phase, Challenge Account, Evaluation Account, Express Consistency Account, Express Non-Consistency Account, Stellar 1-Step Account, Stellar 2-Step Account, Stellar Lite Account, Stellar Instant Account, Free Trial Account, Rapid Account, Legacy Account, Bolt Account, Flex Account, Rapid Challenge Account, Legacy Challenge Account, Bolt Challenge Account, Flex Challenge Account, FundedNext Competition Account, FundedNext Monthly Competition Account, Futures Challenge Account, Futures FundedNext Account, Rapid FundedNext Account, Bolt FundedNext Account, Legacy FundedNext Account, Flex FundedNext Account
+
+PREFERRED CAPITALIZATION:
+Platforms: cTrader, MT4, MetaTrader 4, MT5, MetaTrader 5, Match-Trader, Tradovate, TradingView, NinjaTrader
+Teams: Case Resolution Team, Business Operations Team, Payments and Treasury Team, Trading Ethics & Standards Team, KYC Verification Team, Platform Operation Team, Refund Management Unit, Priority Solution Task Force, FundedNext Partner Success Team, Tech Team, Technology Team, FundedNext Risk Desk Team
+Add-Ons: Swap-Free Add-On, Lifetime Reward 95% Add-On, 150% Reward Add-On, Bi-Weekly Reward Add-On, Maximum Loss Limit 10% Add-On, No Minimum Trading Days Add-On, Double Up Add-On
+Other: KYC, KYC Verification, FundedNext Server, Verification Session, Compliance Session, Refer & Earn, Infinity Points
+
+
+PROFIT TARGETS BY ACCOUNT SIZE — use these directly, never ask the client:
+
+BOLT CHALLENGE ACCOUNT:
+- $50,000 account → $3,000 profit target
+- (Only one account size available)
+
+LEGACY CHALLENGE ACCOUNT:
+- $25,000 account → $1,250 profit target
+- $50,000 account → $3,000 profit target
+- $100,000 account → $6,000 profit target
+
+RAPID CHALLENGE ACCOUNT:
+- $25,000 account → $1,500 profit target
+- $50,000 account → $3,000 profit target
+- $100,000 account → $5,000 profit target
+
+FLEX CHALLENGE ACCOUNT:
+- $50,000 account → $2,500 profit target
+- $100,000 account → $5,000 profit target
+- $150,000 account → $8,000 profit target
+
+When a client mentions their account size, use the correct profit target above to calculate thresholds automatically. If no account size is mentioned, provide the calculation for all available sizes for that model.
+
+CONFIDENCE SCORING — at the very end of your response, on its own line, add exactly one of:
+[CONFIDENCE:high] — you are fully certain the answer is correct based on the rules above
+[CONFIDENCE:mid] — the answer is mostly clear but there is some ambiguity in the query
+[CONFIDENCE:low] — the query is vague, unusual, or touches an edge case you are less certain about
+
+ESCALATION — only respond with [ESCALATION_NEEDED] when the client has a genuine technical issue requiring backend investigation by the Technology Team (platform errors, account access problems, system bugs). Do NOT escalate general questions, math, simple clarifications, or anything answerable from the rules above. If a query is outside consistency rules but not a tech issue, politely say this tool covers Futures consistency rules only — do not escalate.
+
+SOURCE CITATION — at the very end of every valid answer add on a new line: [SOURCE:model:phase]
+model = bolt, legacy, flex, rapid, or all; phase = challenge or account
+Multiple models: [SOURCE:bolt:challenge] [SOURCE:legacy:challenge]
+Never explain the tag, just include it silently.`;
+
+// ── TEST CASES ────────────────────────────────────────────────────────────
+const TEST_CASES = [
+
+  // ═══════════════════════════════════════
+  // CATEGORY 1: ACCURACY — MODEL RULES
+  // ═══════════════════════════════════════
+  {
+    id: 'ACC-01', category: 'Accuracy — Model Rules', name: 'Bolt Challenge — 40% rule exists, no rule in FundedNext Account',
+    query: 'Is there a consistency rule in the Bolt Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'Confirms rule exists in Bolt Challenge Account', fn: r => /yes|there is|applies|40%/i.test(r) },
+      { id: 'c2', text: 'States NO rule in Bolt FundedNext Account', fn: r => /no consistency|no rule|does not apply|fundednext account/i.test(r) },
+      { id: 'c3', text: 'Mentions 40% threshold', fn: r => /40%|40 percent/i.test(r) },
+    ]
+  },
+  {
+    id: 'ACC-02', category: 'Accuracy — Model Rules', name: 'Legacy Challenge — 40% rule exists, no rule in FundedNext Account',
+    query: 'Does the Legacy Challenge Account have a consistency rule? What about the Legacy FundedNext Account?',
+    checks: [
+      { id: 'c1', text: 'Confirms rule exists in Legacy Challenge Account', fn: r => /yes|there is|applies|40%/i.test(r) },
+      { id: 'c2', text: 'States NO rule in Legacy FundedNext Account', fn: r => /no (consistency|rule)|does not apply/i.test(r) },
+    ]
+  },
+  {
+    id: 'ACC-03', category: 'Accuracy — Model Rules', name: 'Flex Challenge — 40% rule exists, no rule in FundedNext Account',
+    query: 'Is there a consistency rule in the Flex Challenge Account and the Flex FundedNext Account?',
+    checks: [
+      { id: 'c1', text: 'Confirms rule exists in Flex Challenge Account', fn: r => /yes|there is|applies|40%/i.test(r) },
+      { id: 'c2', text: 'States NO rule in Flex FundedNext Account', fn: r => /no (consistency|rule)|does not apply/i.test(r) },
+    ]
+  },
+  {
+    id: 'ACC-04', category: 'Accuracy — Model Rules', name: 'Rapid Challenge — NO consistency rule',
+    query: 'Do I need to follow a consistency rule in my Rapid Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'Clearly states NO consistency rule in Rapid Challenge', fn: r => /no consistency|no rule|does not|not apply/i.test(r) },
+      { id: 'c2', text: 'Does not say there IS a rule in the Rapid Challenge', fn: r => !/there is a consistency rule in the rapid challenge/i.test(r) },
+    ]
+  },
+  {
+    id: 'ACC-05', category: 'Accuracy — Model Rules', name: 'Rapid FundedNext Account — has consistency rule for Performance Reward',
+    query: 'When am I eligible to request a Performance Reward from my Rapid FundedNext Account?',
+    checks: [
+      { id: 'c1', text: 'Mentions highest profit day must be 40% or less of total profit', fn: r => /40%|40 percent/i.test(r) },
+      { id: 'c2', text: 'Mentions at least 3 trading days minimum', fn: r => /3 (trading )?days|three (trading )?days/i.test(r) },
+      { id: 'c3', text: 'Uses "Performance Reward" not "Payout"', fn: r => /performance reward/i.test(r) && !/\bpayout\b/i.test(r) },
+    ]
+  },
+
+  // ═══════════════════════════════════════
+  // CATEGORY 2: ACCURACY — CALCULATIONS
+  // ═══════════════════════════════════════
+  {
+    id: 'CAL-01', category: 'Accuracy — Calculations', name: 'Bolt $50K — correct threshold $1,200',
+    query: 'What is the daily profit threshold on my $50K Bolt Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'States profit target is $3,000', fn: r => /3,000|3000/i.test(r) },
+      { id: 'c2', text: 'Calculates threshold as $1,200', fn: r => /1,200|1200/i.test(r) },
+    ]
+  },
+  {
+    id: 'CAL-02', category: 'Accuracy — Calculations', name: 'Legacy $100K — correct threshold $2,400',
+    query: 'What is the daily profit limit for my $100K Legacy Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'States profit target is $6,000', fn: r => /6,000|6000/i.test(r) },
+      { id: 'c2', text: 'Calculates threshold as $2,400', fn: r => /2,400|2400/i.test(r) },
+    ]
+  },
+  {
+    id: 'CAL-03', category: 'Accuracy — Calculations', name: 'Flex $150K — correct threshold $3,200',
+    query: 'What is the daily profit limit on my $150K Flex Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'States profit target is $8,000', fn: r => /8,000|8000/i.test(r) },
+      { id: 'c2', text: 'Calculates threshold as $3,200', fn: r => /3,200|3200/i.test(r) },
+    ]
+  },
+  {
+    id: 'CAL-04', category: 'Accuracy — Calculations', name: 'Legacy $25K — correct threshold $500',
+    query: 'What is my daily profit limit on the $25K Legacy Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'States profit target is $1,250', fn: r => /1,250|1250/i.test(r) },
+      { id: 'c2', text: 'Calculates threshold as $500', fn: r => /\$500|500 (dollars|limit|threshold)/i.test(r) },
+    ]
+  },
+  {
+    id: 'CAL-05', category: 'Accuracy — Calculations', name: 'Flex $50K — new target recalculated correctly to $3,750',
+    query: 'I made $1,500 in profitable trades today on my $50K Flex Challenge Account. What happens to my profit target?',
+    checks: [
+      { id: 'c1', text: 'States original target was $2,500', fn: r => /2,500|2500/i.test(r) },
+      { id: 'c2', text: 'Calculates new target as $3,750', fn: r => /3,750|3750/i.test(r) },
+      { id: 'c3', text: 'Explains threshold was $1,000 and $1,500 exceeded it', fn: r => /1,000|1000|exceeded|above/i.test(r) },
+    ]
+  },
+  {
+    id: 'CAL-06', category: 'Accuracy — Calculations', name: 'Bolt $50K — new target recalculated correctly to $3,750',
+    query: 'My $50K Bolt Challenge Account had a best day of $1,500 profit. My friend said my new target is $5,000. Is that right?',
+    checks: [
+      { id: 'c1', text: 'Corrects the wrong figure ($5,000)', fn: r => /3,750|3750/i.test(r) },
+      { id: 'c2', text: 'Shows correct formula: $1,500 / 40% = $3,750', fn: r => /3,750|3750/i.test(r) },
+    ]
+  },
+  {
+    id: 'CAL-07', category: 'Accuracy — Calculations', name: 'Multiple recalculations — target keeps adjusting',
+    query: 'On my $50K Legacy Challenge Account, Day 1 I made $1,500 so my target became $3,750. On Day 5 I made $2,000. What is my new target now?',
+    checks: [
+      { id: 'c1', text: 'Calculates new target as $5,000 ($2,000 / 40%)', fn: r => /5,000|5000/i.test(r) },
+      { id: 'c2', text: 'Confirms target can recalculate multiple times', fn: r => /recalculate|adjust|again|multiple/i.test(r) },
+    ]
+  },
+  {
+    id: 'CAL-08', category: 'Accuracy — Calculations', name: 'Rapid FundedNext — formula correct, rule not met',
+    query: 'I made $2,000 on Day 1 and $1,000 on Day 2 in my Rapid FundedNext Account. Am I meeting the consistency rule?',
+    checks: [
+      { id: 'c1', text: 'Calculates total profit as $3,000', fn: r => /3,000|3000/i.test(r) },
+      { id: 'c2', text: 'Calculates Day 1 contribution as ~66.67%', fn: r => /66|67%|66\.6/i.test(r) },
+      { id: 'c3', text: 'States rule is NOT met yet', fn: r => /not (yet )?met|not eligible|keep trading|still (need|trading)/i.test(r) },
+    ]
+  },
+  {
+    id: 'CAL-09', category: 'Accuracy — Calculations', name: 'Rapid FundedNext — exactly 40% is met',
+    query: 'My highest profit day was $1,800 and my total profit is $4,500 in my Rapid FundedNext Account. Have I met the consistency rule?',
+    checks: [
+      { id: 'c1', text: 'Calculates 40% contribution correctly', fn: r => /40%|40 percent/i.test(r) },
+      { id: 'c2', text: 'States rule IS met at exactly 40%', fn: r => /met|eligible|yes|qualify|congrat/i.test(r) },
+    ]
+  },
+  {
+    id: 'CAL-10', category: 'Accuracy — Calculations', name: 'New threshold also recalculates after target changes',
+    query: 'My $50K Legacy Challenge profit target changed to $3,750 after I exceeded the threshold. What is my new daily profit limit?',
+    checks: [
+      { id: 'c1', text: 'Calculates new threshold as $1,500 (40% of $3,750)', fn: r => /1,500|1500/i.test(r) },
+    ]
+  },
+
+  // ═══════════════════════════════════════
+  // CATEGORY 3: ACCURACY — CRITICAL RULES
+  // ═══════════════════════════════════════
+  {
+    id: 'CRT-01', category: 'Accuracy — Critical Rules', name: 'Losses do NOT offset profits — breach still stands',
+    query: 'My threshold is $1,200. Today I made $1,201 profit in one trade and then lost $600. My net PnL is $601 which is below $1,200. Have I breached the consistency rule?',
+    checks: [
+      { id: 'c1', text: 'Confirms rule IS breached despite net PnL being below $1,200', fn: r => /breach|exceeded|violated|yes.*breach|breach.*yes/i.test(r) },
+      { id: 'c2', text: 'Explains losses do not offset profits for consistency', fn: r => /loss|offset|net|does not|irrelevant|only profit/i.test(r) },
+    ]
+  },
+  {
+    id: 'CRT-02', category: 'Accuracy — Critical Rules', name: 'Exactly at threshold is safe — not breached',
+    query: 'My threshold is $1,200. I made exactly $1,200 in profitable trades today. Have I breached the consistency rule?',
+    checks: [
+      { id: 'c1', text: 'States exactly $1,200 is safe and does NOT breach the rule', fn: r => /not breach|within|safe|exactly|no.*breach|fine/i.test(r) },
+    ]
+  },
+  {
+    id: 'CRT-03', category: 'Accuracy — Critical Rules', name: 'Even $0.01 over threshold breaches — $1,200.01',
+    query: 'My threshold is $1,200. I made $1,200.01 in profitable trades today. Is that fine?',
+    checks: [
+      { id: 'c1', text: 'States $1,200.01 DOES breach the rule', fn: r => /breach|exceed|violated|not fine|not okay|over/i.test(r) },
+    ]
+  },
+  {
+    id: 'CRT-04', category: 'Accuracy — Critical Rules', name: 'Floating profits do not count — only realized',
+    query: 'My floating profit went to $1,500 but I closed the trade at $900. Did I breach the $1,200 threshold?',
+    checks: [
+      { id: 'c1', text: 'States floating profits do NOT count — only realized', fn: r => /realized|floating|closed|not breach|only.*closed|unrealized/i.test(r) },
+      { id: 'c2', text: 'Confirms $900 is below threshold so rule is NOT breached', fn: r => /not breach|within|safe|below/i.test(r) },
+    ]
+  },
+  {
+    id: 'CRT-05', category: 'Accuracy — Critical Rules', name: 'Daily profit = sum of profitable trades only',
+    query: 'Today I had Trade 1: +$700, Trade 2: -$400, Trade 3: +$600. What is my daily profit for the consistency rule?',
+    checks: [
+      { id: 'c1', text: 'States daily profit = $1,300 (sum of profitable trades only)', fn: r => /1,300|1300/i.test(r) },
+      { id: 'c2', text: 'Explains the loss is excluded from the calculation', fn: r => /loss|excluded|does not count|ignor|only profit/i.test(r) },
+    ]
+  },
+  {
+    id: 'CRT-06', category: 'Accuracy — Critical Rules', name: 'Consistency checked at 5 PM CT only — not real time',
+    query: 'If I exceed my consistency threshold during the trading day, is my account immediately affected?',
+    checks: [
+      { id: 'c1', text: 'States rule is checked at 5:00 PM CT / Dashboard reset — not real time', fn: r => /5 (pm|:00)|dashboard|end of day|eod|not.*real.?time|checked.*after/i.test(r) },
+    ]
+  },
+  {
+    id: 'CRT-07', category: 'Accuracy — Critical Rules', name: 'New target applied after 5 PM CT Dashboard reset',
+    query: 'I breached my consistency rule today. When does my new profit target take effect?',
+    checks: [
+      { id: 'c1', text: 'States new target applies after 5:00 PM CT Dashboard reset', fn: r => /5 (pm|:00)|dashboard|end of day|reset/i.test(r) },
+    ]
+  },
+  {
+    id: 'CRT-08', category: 'Accuracy — Critical Rules', name: 'No appeal or grace period after breach',
+    query: 'Is there any way to appeal a consistency rule breach or get a grace period?',
+    checks: [
+      { id: 'c1', text: 'States there is NO appeal or grace period', fn: r => /no appeal|no grace|not appeal|cannot appeal|final|immediate/i.test(r) },
+    ]
+  },
+  {
+    id: 'CRT-09', category: 'Accuracy — Critical Rules', name: 'Rapid FundedNext — losing days do not reduce total profit',
+    query: 'In my Rapid FundedNext Account I have $3,000 total profit but then I had a losing day of $500. Is my total profit now $2,500 for the consistency formula?',
+    checks: [
+      { id: 'c1', text: 'States losing days do NOT reduce total profit in the formula', fn: r => /not reduce|does not|losing day|losses.*not|only profit/i.test(r) },
+    ]
+  },
+  {
+    id: 'CRT-10', category: 'Accuracy — Critical Rules', name: 'Rapid FundedNext — consistency resets each cycle',
+    query: 'After I receive my Performance Reward from my Rapid FundedNext Account, does the consistency rule start fresh or carry over?',
+    checks: [
+      { id: 'c1', text: 'States consistency resets / starts fresh each cycle', fn: r => /reset|fresh|new cycle|start(s)? (fresh|again|over)|each cycle/i.test(r) },
+    ]
+  },
+  {
+    id: 'CRT-11', category: 'Accuracy — Critical Rules', name: 'Bolt only has $50K — no other sizes',
+    query: 'What sizes are available for the Bolt Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'States only $50K is available for Bolt', fn: r => /50k|\$50,000|only.*50|one size/i.test(r) },
+      { id: 'c2', text: 'Does NOT mention other sizes for Bolt', fn: r => !/25k|100k|150k/i.test(r) },
+    ]
+  },
+  {
+    id: 'CRT-12', category: 'Accuracy — Critical Rules', name: 'No Consistency Add-On — does not exist anymore',
+    query: 'Can I buy a No Consistency Add-On to remove the consistency rule from my Bolt Challenge?',
+    checks: [
+      { id: 'c1', text: 'States the No Consistency Add-On no longer exists / was removed', fn: r => /no longer|removed|not available|discontinued/i.test(r) },
+      { id: 'c2', text: 'Does NOT say it is available for purchase', fn: r => !/you can (buy|purchase|get)|available for/i.test(r) },
+    ]
+  },
+
+  // ═══════════════════════════════════════
+  // CATEGORY 4: TERMINOLOGY & BRANDING
+  // ═══════════════════════════════════════
+  {
+    id: 'TRM-01', category: 'Terminology', name: 'Never uses "Payout" — says "Performance Reward"',
+    query: 'How do I get my payout from my Rapid FundedNext Account?',
+    checks: [
+      { id: 'c1', text: 'Uses "Performance Reward"', fn: r => /performance reward/i.test(r) },
+      { id: 'c2', text: 'Does NOT use the word "payout"', fn: r => !/\bpayout\b/i.test(r) },
+    ]
+  },
+  {
+    id: 'TRM-02', category: 'Terminology', name: 'Never uses "funded account" lowercase',
+    query: 'What happens after I pass the Bolt Challenge?',
+    checks: [
+      { id: 'c1', text: 'Does NOT say "funded account" in lowercase', fn: r => !/\bfunded account\b/i.test(r) || /FundedNext Account/i.test(r) },
+      { id: 'c2', text: 'Uses "FundedNext Account" correctly', fn: r => /FundedNext Account/i.test(r) },
+    ]
+  },
+  {
+    id: 'TRM-03', category: 'Terminology', name: 'No em dashes in response',
+    query: 'Can you explain the consistency rule for the Flex Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'Does not contain em dashes (— or –)', fn: r => !/[—–]/.test(r) },
+    ]
+  },
+  {
+    id: 'TRM-04', category: 'Terminology', name: 'Correct account name capitalization',
+    query: 'Does the bolt challenge account have a consistency rule?',
+    checks: [
+      { id: 'c1', text: 'Uses "Bolt Challenge Account" with correct capitalization', fn: r => /Bolt Challenge Account/i.test(r) },
+    ]
+  },
+  {
+    id: 'TRM-05', category: 'Terminology', name: 'Out of scope — no drawdown answers',
+    query: 'What is the maximum drawdown for the Rapid Challenge Account?',
+    checks: [
+      { id: 'c1', text: 'Politely says tool only covers consistency rules', fn: r => /consistency rules only|only covers|outside|not cover/i.test(r) },
+      { id: 'c2', text: 'Does NOT provide drawdown information', fn: r => !/drawdown (is|limit)|mll is \$/i.test(r) },
+    ]
+  },
+
+  // ═══════════════════════════════════════
+  // CATEGORY 5: BEHAVIOR
+  // ═══════════════════════════════════════
+  {
+    id: 'BEH-01', category: 'Behavior', name: 'Never asks follow-up questions on vague query',
+    query: 'Tell me about the consistency rule.',
+    checks: [
+      { id: 'c1', text: 'Gives a complete answer without asking for more info', fn: r => r.length > 100 },
+      { id: 'c2', text: 'Does not ask which model or account type', fn: r => !/(which model|what account|could you (tell|clarify)|what (size|type))\?/i.test(r) },
+    ]
+  },
+  {
+    id: 'BEH-02', category: 'Behavior', name: 'Never says reach out to support',
+    query: 'My profit target changed, who should I contact?',
+    checks: [
+      { id: 'c1', text: 'Does not say "reach out to support/team"', fn: r => !/reach out to (support|our team|fundednext)/i.test(r) },
+      { id: 'c2', text: 'Provides a helpful answer directly', fn: r => r.length > 50 },
+    ]
+  },
+  {
+    id: 'BEH-03', category: 'Behavior', name: 'Empathetic tone for frustrated client',
+    query: 'My profit target jumped from $3,000 to $3,750 and I had no idea this would happen. This is ridiculous!',
+    checks: [
+      { id: 'c1', text: 'Shows empathy', fn: r => /understand|sorry|apologize|frustrat|completely|absolutely/i.test(r) },
+      { id: 'c2', text: 'Explains why the target changed', fn: r => /40%|daily profit|threshold|exceeded/i.test(r) },
+    ]
+  },
+  {
+    id: 'BEH-04', category: 'Behavior', name: 'No markdown headers',
+    query: 'Explain all consistency rules across all models.',
+    checks: [
+      { id: 'c1', text: 'Does not use markdown headers', fn: r => !/^#{1,3} /m.test(r) },
+      { id: 'c2', text: 'Covers multiple models', fn: r => /bolt|legacy|flex|rapid/i.test(r) },
+    ]
+  },
+  {
+    id: 'BEH-05', category: 'Behavior', name: 'Does not escalate simple questions',
+    query: 'What is 40% of $3,000?',
+    checks: [
+      { id: 'c1', text: 'Does NOT escalate a math question', fn: r => !/ESCALATION_NEEDED/i.test(r) },
+      { id: 'c2', text: 'Answers correctly', fn: r => /1,200|1200/i.test(r) },
+    ]
+  },
+  {
+    id: 'BEH-06', category: 'Behavior', name: 'Handles all-caps query normally',
+    query: 'DOES THE BOLT CHALLENGE HAVE A CONSISTENCY RULE?',
+    checks: [
+      { id: 'c1', text: 'Responds normally and accurately', fn: r => /40%|yes|consistency/i.test(r) },
+      { id: 'c2', text: 'Does not respond in all caps', fn: r => r !== r.toUpperCase() },
+    ]
+  },
+  {
+    id: 'BEH-07', category: 'Behavior', name: 'Does not invent rules for unknown model',
+    query: 'What is the consistency rule for the Stellar 2-Step Account?',
+    checks: [
+      { id: 'c1', text: 'States tool covers Futures consistency rules only', fn: r => /futures consistency|consistency rules only|outside|not cover/i.test(r) },
+      { id: 'c2', text: 'Does NOT invent a rule for Stellar', fn: r => !/stellar.*40%|40%.*stellar/i.test(r) },
+    ]
+  },
+  {
+    id: 'BEH-08', category: 'Behavior', name: 'Handles multi-question query fully',
+    query: 'Does the Bolt Challenge have a consistency rule? What about the Rapid FundedNext Account? And the Legacy FundedNext Account?',
+    checks: [
+      { id: 'c1', text: 'Answers Bolt Challenge correctly (has rule)', fn: r => /bolt.*(yes|has|applies|40%)/i.test(r) || /40%.*(bolt)/i.test(r) },
+      { id: 'c2', text: 'Answers Rapid FundedNext Account (has withdrawal eligibility rule)', fn: r => /rapid.*fundednext|fundednext.*rapid/i.test(r) },
+      { id: 'c3', text: 'Answers Legacy FundedNext Account (no rule)', fn: r => /legacy.*(no|does not)|no.*consistency.*legacy/i.test(r) },
+    ]
+  },
+
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let results = [];
+let isRunning = false;
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function icon(type) {
+  const icons = {
+    pass: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2ECC71" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    fail: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FD79A8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    warn: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F9CA24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>`,
+    running: `<div class="spinner-dots"><span></span><span></span><span></span></div>`,
+    pending: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3A3A46" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`
+  };
+  return icons[type] || icons.pending;
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── RENDER TEST CARD ──────────────────────────────────────────────────────
+function renderCard(tc, result) {
+  const status = result ? result.status : 'pending';
+  const statusLabel = {pass:'PASS', fail:'FAIL', warn:'PARTIAL', running:'RUNNING', pending:'PENDING'}[status];
+  const checksHtml = result && result.checks ? result.checks.map(c =>
+    `<div class="check-row ${c.passed ? 'pass' : 'fail'}">
+      <span class="check-icon">${c.passed ? '✓' : '✗'}</span>
+      <span class="check-text">${escHtml(c.text)}</span>
+    </div>`
+  ).join('') : '<div style="color:var(--faint);font-size:12px;">Not yet run</div>';
+
+  const verdictText = {
+    pass: 'All checks passed',
+    fail: 'One or more checks failed',
+    warn: 'Some checks passed',
+    running: 'Running...',
+    pending: 'Pending'
+  }[status];
+
+  return `<div class="test-card ${status}" id="card-${tc.id}">
+    <div class="test-header" onclick="toggleCard('${tc.id}')">
+      <div class="test-status-icon ${status}">${icon(status)}</div>
+      <div class="test-info">
+        <div class="test-name">${escHtml(tc.name)}</div>
+        <div class="test-category">${tc.id} · ${tc.category}</div>
+      </div>
+      <span class="test-score-badge ${status}">${statusLabel}</span>
+      <svg class="expand-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="test-body">
+      <div class="test-body-grid">
+        <div>
+          <div class="test-field-label">Client Query</div>
+          <div class="test-query-box">${escHtml(tc.query)}</div>
+        </div>
+        <div>
+          <div class="test-field-label">AI Response</div>
+          <div class="test-response-box">${result && result.response ? escHtml(result.response) : '<span style="color:var(--faint)">Not yet run</span>'}</div>
+        </div>
+      </div>
+      <div class="test-field-label">Checks</div>
+      <div class="test-checks">${checksHtml}</div>
+      ${result ? `<div class="verdict-row ${status}">${icon(status)}<span>${verdictText}</span></div>` : ''}
+    </div>
+  </div>`;
+}
+
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('expanded');
+}
+
+// ── RENDER FULL REPORT ────────────────────────────────────────────────────
+function renderReport() {
+  // Group by category
+  const categories = {};
+  TEST_CASES.forEach(tc => {
+    if (!categories[tc.category]) categories[tc.category] = [];
+    categories[tc.category].push(tc);
+  });
+
+  let html = '';
+  for (const [cat, tests] of Object.entries(categories)) {
+    const catResults = tests.map(tc => results.find(r => r.id === tc.id));
+    const done = catResults.filter(r => r && r.status !== 'pending' && r.status !== 'running');
+    const catPass = done.filter(r => r.status === 'pass').length;
+    const catFail = done.filter(r => r.status === 'fail').length;
+    const catWarn = done.filter(r => r.status === 'warn').length;
+    const catBadge = done.length === 0 ? 'pending' : catFail > 0 ? 'fail' : catWarn > 0 ? 'partial' : 'pass';
+    const catBadgeText = done.length === 0 ? 'Pending' : `${catPass}/${done.length} passed`;
+
+    html += `<div class="category-section">
+      <div class="cat-header">
+        <span class="cat-title">${cat}</span>
+        <span class="cat-badge ${catBadge}">${catBadgeText}</span>
+      </div>`;
+    tests.forEach(tc => {
+      const result = results.find(r => r.id === tc.id);
+      html += renderCard(tc, result);
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('reportContent').innerHTML = html;
+  updateSummary();
+}
+
+function updateSummary() {
+  const done = results.filter(r => r.status !== 'pending' && r.status !== 'running');
+  const pass = done.filter(r => r.status === 'pass').length;
+  const fail = done.filter(r => r.status === 'fail').length;
+  const warn = done.filter(r => r.status === 'warn').length;
+  const score = done.length > 0 ? Math.round(((pass + warn * 0.5) / TEST_CASES.length) * 100) : 0;
+
+  document.getElementById('sumTotal').textContent = TEST_CASES.length;
+  document.getElementById('sumPass').textContent = pass;
+  document.getElementById('sumFail').textContent = fail;
+  document.getElementById('sumWarn').textContent = warn;
+  document.getElementById('sumScore').textContent = done.length > 0 ? score + '%' : '-';
+  document.getElementById('summarySection').style.display = done.length > 0 ? 'block' : 'none';
+}
+
+// ── API CALL ──────────────────────────────────────────────────────────────
+async function askAI(query) {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  // Try direct Groq first, fall back to worker
+  const urls = [
+    { url: 'https://api.groq.com/openai/v1/chat/completions', auth: 'Bearer ' + key },
+    { url: 'https://testcons.farhanoishikcsgo-908.workers.dev/', auth: 'Bearer ' + key }
+  ];
+
+  let lastErr = null;
+  for (const {url, auth} of urls) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 600,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: query }
+          ]
+        })
+      });
+      const data = await res.json();
+      if (data.error) { lastErr = new Error(data.error.message || JSON.stringify(data.error)); continue; }
+      return data.choices[0].message.content;
+    } catch(e) { lastErr = e; continue; }
+  }
+  throw lastErr || new Error('All endpoints failed');
+}
+
+// ── RUN TESTS ─────────────────────────────────────────────────────────────
+async function runAllTests() {
+  if (isRunning) return;
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key || !key.startsWith('gsk_')) {
+    alert('Please enter a valid Groq API key starting with gsk_');
+    return;
+  }
+
+  isRunning = true;
+  results = TEST_CASES.map(tc => ({ id: tc.id, status: 'pending', response: '', checks: [] }));
+  const delay = parseInt(document.getElementById('delayInput').value) || 2000;
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.classList.add('spinning');
+  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.87"/></svg> Running...`;
+
+  document.getElementById('progressWrap').classList.add('visible');
+  document.getElementById('exportBar').style.display = 'none';
+
+  renderReport();
+
+  for (let i = 0; i < TEST_CASES.length; i++) {
+    const tc = TEST_CASES[i];
+    const pct = Math.round((i / TEST_CASES.length) * 100);
+
+    // Update progress
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressCurrent').textContent = `Running: ${tc.id} — ${tc.name}`;
+    document.getElementById('progressLabel').textContent = `Test ${i+1} of ${TEST_CASES.length}`;
+
+    // Mark as running
+    results[i].status = 'running';
+    renderReport();
+
+    try {
+      const response = await askAI(tc.query);
+      const checkResults = tc.checks.map(c => ({ text: c.text, passed: c.fn(response) }));
+      const passCount = checkResults.filter(c => c.passed).length;
+      const status = passCount === checkResults.length ? 'pass' : passCount === 0 ? 'fail' : 'warn';
+      results[i] = { id: tc.id, status, response, checks: checkResults };
+    } catch(err) {
+      results[i] = { id: tc.id, status: 'fail', response: 'Error: ' + err.message, checks: tc.checks.map(c => ({ text: c.text, passed: false })) };
+    }
+
+    renderReport();
+    if (i < TEST_CASES.length - 1) await sleep(delay);
+  }
+
+  // Done
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressPct').textContent = '100%';
+  document.getElementById('progressLabel').textContent = 'All tests complete';
+  document.getElementById('progressCurrent').textContent = '';
+
+  btn.disabled = false;
+  btn.classList.remove('spinning');
+  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Again`;
+
+  const now = new Date();
+  document.getElementById('exportTime').textContent = now.toLocaleString();
+  document.getElementById('exportBar').style.display = 'flex';
+  isRunning = false;
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const rows = [['ID','Category','Test Name','Status','Query','Response','Checks Passed','Checks Failed']];
+  TEST_CASES.forEach(tc => {
+    const r = results.find(x => x.id === tc.id);
+    if (!r) return;
+    const passed = r.checks.filter(c => c.passed).length;
+    const failed = r.checks.filter(c => !c.passed).length;
+    rows.push([tc.id, tc.category, tc.name, r.status.toUpperCase(), tc.query, (r.response||'').replace(/\n/g,' '), passed, failed]);
+  });
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+  download('consistency-test-report.csv', 'text/csv', csv);
+}
+
+function exportJSON() {
+  const data = TEST_CASES.map(tc => {
+    const r = results.find(x => x.id === tc.id) || {};
+    return { id: tc.id, category: tc.category, name: tc.name, query: tc.query, status: r.status, response: r.response, checks: r.checks };
+  });
+  download('consistency-test-report.json', 'application/json', JSON.stringify(data, null, 2));
+}
+
+function download(filename, type, content) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type }));
+  a.download = filename;
+  a.click();
+}
+</script>
+</body>
+</html>
